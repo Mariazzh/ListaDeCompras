@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
+
+  <title>Lista de Compras</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+    }
+    button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+  
+<body>
+  <h1>Lista de Compras</h1>
+
+
+  <form id="shopping-form">
+    <input type="text" id="item-name" placeholder="Nome do Item" required>
+    <input type="number" id="item-quantity" placeholder="Quantidade" required>
+    <button type="submit">Adicionar Item</button>
+  </form>
+
+  
+  <ul id="Lista_De_Compras"></ul>
+
+  <script>
+  
+    const apiBaseUrl = 'https://c7a1a130-e04c-476b-94bc-0509bd5ffb44-00-30fns8u465g4n.worf.replit.dev/'; 
+
+    Parse.initialize("bI8uwgpxhaHBl3ZOBPTPHYIRrInPBms3mNJplVwc
+", "uas7iXdUBMfRDxG9mALspPjIPu32ZB1z0SVYTgIH");
+    Parse.serverURL = 'https://parseapi.back4app.com/';
+
+  
+    async function loadItems() {
+      const query = new Parse.Query('ShoppingItem');
+      try {
+        const results = await query.find();
+        const list = document.getElementById('shopping-list');
+        list.innerHTML = '';
+
+        results.forEach(item => {
+          const listItem = document.createElement('li');
+          listItem.innerHTML = `
+            ${item.get('name')} - Quantidade: ${item.get('quantity')}
+            <button onclick="deleteItem('${item.id}')">Excluir</button>
+            <button onclick="editItem('${item.id}', '${item.get('name')}', ${item.get('quantity')})">Editar</button>
+          `;
+          list.appendChild(listItem);
+        });
+      } catch (error) {
+        console.error('Error loading items:', error);
+      }
+    }
+
+    
+    async function addItem(event) {
+      event.preventDefault();
+      const name = document.getElementById('item-name').value;
+      const quantity = document.getElementById('item-quantity').value;
+
+      const ShoppingItem = Parse.Object.extend('ShoppingItem');
+      const item = new ShoppingItem();
+
+      item.set('name', name);
+      item.set('quantity', parseInt(quantity));
+
+      try {
+        await item.save();
+        loadItems();
+        document.getElementById('shopping-form').reset();
+      } catch (error) {
+        console.error('Error adding item:', error);
+      }
+    }
+
+   
+    async function deleteItem(id) {
+      const query = new Parse.Query('ShoppingItem');
+      try {
+        const item = await query.get(id);
+        await item.destroy();
+        loadItems();
+      } catch (error) {
+        console.error('Error deleting item:', error);
+      }
+    }
+
+ 
+    async function editItem(id, name, quantity) {
+      const newName = prompt('Novo nome:', name);
+      const newQuantity = prompt('Nova quantidade:', quantity);
+
+      if (newName && newQuantity) {
+        const query = new Parse.Query('ShoppingItem');
+        try {
+          const item = await query.get(id);
+          item.set('name', newName);
+          item.set('quantity', parseInt(newQuantity));
+          await item.save();
+          loadItems();
+        } catch (error) {
+          console.error('Error updating item:', error);
+        }
+      }
+    }
+
+    document.getElementById('shopping-form').addEventListener('submit', addItem);
+
+
+    loadItems();
+
+
+    <link rel="stylesheet" href="/css/style.css">
+
+  </script>
+</body>
+</html>
+
